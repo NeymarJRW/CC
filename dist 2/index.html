@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang=en>
+
+<head>
+  <meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0">
+  <meta name=viewport
+    content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name=viewport content=minimal-ui>
+  <meta name=full-screen content=yes>
+  <meta name=x5-fullscreen content=true>
+  <meta name=mobile-web-app-capable content=yes>
+  <meta http-equiv=Cache-Control content="max-age=7200">
+  <meta http-equiv=Expires content="Mon, 20 Jul 2013 23:00:00 GMT">
+  <meta charset=utf-8>
+  <meta http-equiv=X-UA-Compatible content="IE=edge">
+  <meta name=viewport content="width=device-width,initial-scale=1">
+  <link rel=icon type=image/x-icon href=/Public/favicon.ico> <script src=https://res.wx.qq.com/open/js/jweixin-1.3.2.js>
+    </script> <link rel="shortcut icon" type=image/x-icon href=/Public/favicon.ico> <script async
+    src=//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js> </script> <title>
+  </title>
+  <link href=/Public/api/js/chunk-24987b8d.bb84ec05.js rel=prefetch>
+  <link href=/Public/api/js/chunk-34372ac8.56a59df0.js rel=prefetch>
+  <link href=/Public/api/js/chunk-76e473d8.e5964dfb.js rel=prefetch>
+  <link href=/Public/api/js/chunk-9d20dafc.7c307ea4.js rel=prefetch>
+  <link href=/Public/api/js/chunk-a774881e.2de791e3.js rel=prefetch>
+  <link href=/Public/api/js/chunk-afeb4cdc.953e849e.js rel=prefetch>
+  <link href=/Public/api/js/chunk-c867d97c.e867cf42.js rel=prefetch>
+  <link href=/Public/api/js/app.e25e5e14.js rel=preload as=script>
+  <link href=/Public/api/js/chunk-vendors.a7de1e5f.js rel=preload as=script>
+</head>
+
+<body><noscript><strong>We're sorry but ccgirl doesn't work properly without JavaScript enabled. Please enable it to
+      continue.</strong></noscript>
+  <div id=app></div>
+  <div class=gooleAd></div>
+  <!-- <script src=//imasdk.googleapis.com/js/sdkloader/ima3.js> </script> -->
+   <script>
+    var ua = navigator.userAgent;
+    var isWeixin = ua.indexOf('miniProgram') > -1;
+    var iphonex = ua.indexOf('iphone') > -1;
+    // alert(iphonex)
+    var isYYB = ua.indexOf('yyb') > -1;
+    var head = document.getElementsByTagName('head')[0];
+    var script = document.createElement('script');
+    script.type = 'text/javascript'
+    script.src = '//imasdk.googleapis.com/js/sdkloader/ima3.js';
+    head.appendChild(script)
+    if (isWeixin) {
+      //小程序
+      document.querySelector('.gooleAd').style.display = 'none'
+      localStorage.setItem('weixin', '1')
+    } else {
+      // console.log('++++++++++++++++++++++++++++++++')
+      localStorage.removeItem('weixin');
+
+      //不是小程序
+
+    }
+    // console.log(isYYB)
+    if (isYYB) {
+      //应用宝
+      document.querySelector('.gooleAd').style.display = 'none'
+      localStorage.setItem('yyb', '1')
+    } else {
+      localStorage.removeItem('yyb');
+    }
+  </script>
+  <script src=/Public/api/js/chunk-vendors.a7de1e5f.js> </script> <script src=/Public/api/js/app.e25e5e14.js> </script> </body> </html>

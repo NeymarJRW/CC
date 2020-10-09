@@ -1,0 +1,462 @@
+<template>
+  <div>
+
+    <div ref="content" class="content" style="height:100%">
+      <div v-if="pic==true" style="height:100%;" class="display-flex justify-content align-items">
+        <cell>
+          <spinner :size="index === 3 ? '40px' : ''"></spinner>
+        </cell>
+      </div>
+      <div class="ad" >
+       </div>
+      <div v-if="pic==false" class="cc_home_view" v-for="(item,index) in lists" :key="index">
+        <div class="img_two" v-for="(i,index) in item" @click="dianji(i)">
+          <!-- <div id="indexad">
+             <div v-if="index==0" id="adsgoeshere" style=" text-align: center;display:none" v-html="adsenseContent">     
+             </div>
+          </div> -->
+          <img  
+          v-lazy="index==0 ? baseUrl+i.image : baseUrl+i.thumbnail" 
+          class="cc_home_img" 
+          alt>
+          <img  v-if="i.type==1||i.type==2" class="cc_home_img type_img" v-lazy="i.type==1 ? iosPic : (i.type==2 ? andPic : '' )"
+            @click="sendUrl(i.url)">
+
+        </div>
+      </div>
+      <p v-if="footerTishi" class="display-flex" style="color:#949494;font-size:0.386667rem;">
+        <div v-if="this.$store.state.Langugeflag == true && footerTishi == false" class="display-flex justify-content">
+          <cell>
+            <spinner :size="index === 3 ? '40px' : ''"></spinner>
+          </cell>
+        </div>
+        <div v-if="this.$store.state.Langugeflag == false && footerTishi == false" class="display-flex justify-content align-items ">
+          <cell>
+            <spinner :size="index === 3 ? '40px' : ''"></spinner>
+          </cell>
+        </div>
+        <div v-if="this.$store.state.Langugeflag == true && footerTishi == true" class="display-flex justify-content align-items">
+          <img
+            style="width:30%;height:50%" :src="cbottom" />
+           <bottom></bottom>
+            </div>
+        <div v-if="this.$store.state.Langugeflag == false && footerTishi == true" class="display-flex justify-content align-items"><img
+            style="width:30%;height:50%" :src="ebottom" />
+            <bottom></bottom>
+            </div>
+      </p>
+    </div>
+  </div>
+</template>
+<script>
+import bottom from "../components/bottom";
+  // import ebottom from "../images/ebottom.png";
+  import {
+    cbottom,
+    ebottom,
+    ios,
+    and
+  } from "../api/img.js"
+  // import cbottom from "../images/cbottom.png";
+  import {
+    getHome,
+    saveGame,
+    clickNum,
+    Ua,
+    Languge,
+    scrollBottom,
+    HomeCache,
+    judegHttp,
+    cancelscroll,
+    baseUrl,
+  } from "../api/index.js";
+  import {
+    open
+  } from 'fs';
+  import {
+    Spinner,
+    Group,
+    Cell
+  } from 'vux'
+  export default {
+    components: {
+      Spinner,
+      Cell,
+      Group,
+      bottom
+    },
+    data() {
+      return {
+        adsenseContent:'',
+        lists: [],
+        liulan: [],
+        liulan_id: [],
+        page: 0,
+        footerTishi: false, //提示
+        nameFlag: true, //中文为true 英文为false,
+        iosPic: "",
+        andPic: "",
+        pic: true, //在加载完成之前显示loading
+        index: 0,
+        cbottom: '',
+        ebottom: ''
+      };
+    },
+    watch: {
+      //当接口没有游戏返回时取消滚动事件
+      footerTishi(value) {
+        var con = doc(".content");
+        con.removeEventListener("scroll", this.scrollfun);
+      }
+    },
+    updated() {
+      // this.indexAd()
+    },
+    methods: {
+      stop: function () {
+        document.body.style.overflow = 'hidden';
+        document.addEventListener("touchmove", mo, false); //禁止页面滑动
+      },
+      //当为安卓或ios时
+      sendUrl: function (gameurl) {
+        if (window.webkit) {
+          var param = {
+            type: "openappstore",
+            url: gameurl
+          };
+          window.webkit.messageHandlers.girlBoxGame.postMessage(param);
+        } else {
+          window.open(gameurl)
+        }
+        if (window.girlBoxGame) {
+          girlBoxGame.visit(gameurl);
+        }
+        location.hash = `#/?air=1&openappstore=${gameurl}`;
+
+      },
+      //游戏跳转
+      dianji: function (arr) {
+              console.log('----------------------------------------------------')
+
+        localStorage.setItem("fromPath", '/');
+        localStorage.setItem("msgplay", arr.id);
+        localStorage.setItem("url", baseUrl + arr.url);
+        localStorage.setItem("gameLabel", arr.gameLabel[0].id);
+        //  console.log(arr)
+        if (arr.type == 0) {
+          //获取当前浏览游戏数据
+          saveGame(this.liulan, this.liulan_id, arr, arr.id);
+          //点击量
+          clickNum({
+            id: arr.id
+          }).then(res => {});
+          //传横竖屏
+          var direction;
+          if (arr.screen == 1) {
+            direction = "land";
+          } else {
+            direction = "port";
+          }
+
+          if (window.girlBoxGame) {
+            girlBoxGame.direction(direction);
+          }
+          // location.hash = `#/?air=1&direction=${direction}`;
+          var w = docEl.clientWidth;
+          var h = docEl.clientHeight;
+          localStorage.setItem("screenWidth", w);
+          localStorage.setItem("screenHidth", h);
+          arr.air = 1
+          arr.direction = direction
+          // console.log(arr)
+          localStorage.setItem('screen', arr.screen) //存取屏幕横屏或竖屏
+          this.$router.push({
+            name: "game",
+            query: arr
+          });
+          // if(window.webkit.messageHandlers.girlBoxGame){
+          //  window.webkit.messageHandlers.girlBoxGame.postMessage(direction);
+          // }
+        }
+
+      },
+      //滚动触发
+      scrollfun: function () {
+        var con = doc(".content");
+        con.style.overflow = "scroll";
+        var scrollTop = con.scrollTop;
+        //变量windowHeight是可视区的高度
+        var windowHeight = con.clientHeight;
+        //变量scrollHeight是滚动条的总高度
+        var scrollHeight = con.scrollHeight;
+        //滚动条到底部的条件
+        if (scrollTop + windowHeight + 20 > scrollHeight) {
+          getHome({
+            page: this.page++,
+            type: Ua
+          }).then(res => {
+            if (res.state == "1") {
+              var arr = res.msg;
+              for (var index in arr) {
+                this.lists.push(arr[index]);
+              }
+            } else {
+              this.footerTishi = true;
+            }
+          });
+        }
+      },
+      //首页广告
+      indexAd: function () {
+        setTimeout(()=>{
+          var w = docEl.clientWidth;
+          var h = docEl.clientHeight;
+          var indexad = doc('#indexad')
+          indexad.querySelector('#adsgoeshere').style.display='block'
+          if (indexad) {
+          this.adsenseContent = document.getElementById(
+          "divadsensedisplaynone"
+        ).innerHTML
+            if (h > w) {
+              //竖屏
+              indexad.style.cssText =
+                ` width:4.613333rem;
+                    height:4.613333rem;
+                    border-radius:12%;
+                    position:absolute; 
+                    background:#fff;
+                    top:0rem;
+                    left:0rem;
+                    display:block `;
+            } else {
+              //横屏
+              indexad.style.cssText =
+                ` width:4.613333rem;
+                    height:4.613333rem;
+                    border-radius:12%;
+                    position:absolute; 
+                    top:0rem;
+                    left:0rem;
+                    display:none `;
+
+            }
+            //  }
+          }
+        },200)
+
+
+      }
+
+    },
+    mounted() {
+      this.cbottom = cbottom;
+      this.ebottom = ebottom;
+      // window.addEventListener('resize', () => {
+      //   this.indexAd()
+      // })
+      this.iosPic = ios;
+      this.andPic = and;
+      this.baseUrl = baseUrl;
+      //判断语言
+      if (!this.$store.state.Langugeflag) {
+        this.nameFlag = false;
+      } else {
+        this.nameFlag = true;
+      }
+      // console.log(this.nameFlag)
+      var fun = () => {
+        getHome({
+          page: this.page++,
+          type: Ua
+        }).then(res => {
+          // this.pic = false;
+          if (res.state == "1") {
+            this.pic=false
+            var arr = res.msg;
+            for (var index in arr) {
+              this.lists.push(arr[index]);
+            }
+            localForage.setItem("home_cache", this.lists);
+
+            // log(this.page<=2{})
+            if(this.page<=2){
+              fun()
+            }
+
+          } else {
+            this.footerTishi = true;
+          }
+        });
+      };
+      //获取缓存
+      HomeCache().then(res => {
+        this.lists = res || [];
+        //获取游戏
+        getHome({
+          page: this.page++,
+          type: Ua
+        }).then(res => {
+          var arr = res.msg;
+          if (res.state == "1") {
+            this.pic=false
+            this.lists = [];
+            for (var index in arr) {
+              this.lists.push(arr[index]);
+            }
+            //缓存
+            localForage.setItem("home_cache", this.lists);
+            fun();
+          }else{
+            this.footerTishi = true;
+          }
+
+        });
+      });
+      var con = doc(".content");
+      con.style.overflow = "scroll";
+      con.addEventListener("scroll", this.scrollfun);
+    }
+  };
+</script>
+<style lang="stylus" scoped>
+  .content {
+    padding: 0.186667rem 0.24rem;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    position relative
+  }
+
+  .cc_home_view:after {
+    display: table;
+    content: '';
+    clear: both;
+  }
+
+  .cc_home_view {
+    font-size: 0;
+
+    .img_two {
+      position: relative;
+    }
+
+    .img_two:nth-child(1) .cc_home_img {
+      // height: 4.586667rem;
+      height: 4.55rem
+        /* 173/37.5 */
+        width: 4.55rem;
+    }
+
+    // .cc_home_img {
+    //   height: 2.186667rem;
+    //   width: 2.186667rem;
+    //   border-radius: 12%;
+    // }
+    .cc_home_img {
+      height: 2.18rem
+        /* 82/37.5 */
+        width: 2.18rem;
+      border-radius: 12%;
+    }
+
+    .type_img {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+  }
+
+  //兼容不同的浏览器
+  //是否是弹性盒
+  .display-flex {
+    display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+    flex-direction : column;
+    
+  }
+
+  //是否铺满剩余
+  .flex-item {
+    -webkit-box-flex: 1;
+    -moz-box-flex: 1;
+    -webkit-flex: 1;
+    -ms-flex: 1;
+    flex: 1;
+  }
+
+  //弹性盒里面的元素横还是竖
+  .flex-direction {
+    -webkit-box-orient: vertical;
+    -webkit-flex-direction: column;
+    -moz-flex-direction: column;
+    -ms-flex-direction: column;
+    -o-flex-direction: column;
+    flex-direction: column;
+  }
+
+  //居中
+  .justify-content {
+    -webkit-box-pack: center;
+    -moz-justify-content: center;
+    -webkit-justify-content: center;
+    justify-content: center;
+  }
+
+  .align-items {
+    -webkit-box-align: center;
+    -moz-align-items: center;
+    -webkit-align-items: center;
+    align-items: center;
+  }
+
+  .flex-wrap {
+    -webkit-flex-wrap: wrap;
+    -webkit-box-lines: multiple;
+    -moz-flex-wrap: wrap;
+    flex-wrap: wrap;
+  }
+
+
+
+  /* 竖屏 */
+  @media all and (orientation: portrait) {
+
+    .img_two {
+      margin: 0.106667rem 0.08rem;
+      float: left;
+    }
+    .img_two:nth-child(1) {
+      float: left;
+    }
+
+    // .ad {
+    //   width 4.613333rem
+    //   /* 173/37.5 */
+    //   height 4.613333rem
+    //   /* 173/37.5 */
+    //   background #fff 
+    //   border-radius 12% 
+    //   margin 0.106667rem 0.08rem 
+    //   position absolute t
+    //   op 0.186667rem
+    // }
+  }
+
+  /* 横屏 */
+  @media all and (orientation: landscape) {
+    .img_two:nth-child(1) {
+      margin-left: 0.16rem;
+    }
+
+    .img_two {
+      margin: 0.106667rem 0.266667rem;
+      float: left;
+    }
+  }
+</style>
